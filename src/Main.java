@@ -10,10 +10,9 @@ public class Main {
         int valueMax = 0;  // Значение максимального количества повторов комбинации
 
         // Заполнение коллекции комбинаций повторов и их частоты
-        for (int i = 1; i < 10; i++) {
-            new Thread(() -> {
-                synchronized (myThread)  { myThread.add(Thread.currentThread());}
-                System.out.println("Float " + Thread.currentThread().getName() + " started.....");
+        for (int i = 1; i <= 100; i++) {
+            Thread thread = new Thread(() -> {
+//                System.out.println("Float " + Thread.currentThread().getName() + " started.....");
                 final int countR = calcR(generateRoute("RLRFR", 100));
                 synchronized (sizeToFreq) {
                     if (sizeToFreq.isEmpty()) {
@@ -24,14 +23,19 @@ public class Main {
                         } else sizeToFreq.putIfAbsent(countR, 1);
                     }
                 }
-            }).start();
-        }
+            });
             synchronized (myThread) {
-                for (Thread thread : myThread) {
-                    thread.join();
-                    System.out.println("Flow " + thread.getName() + " is done.");
-                }
+                myThread.add(thread);
             }
+            thread.start();
+        }
+        // Проверка завершения всех запущеных потоков
+        synchronized (myThread) {
+            for (Thread thread : myThread) {
+                thread.join();
+//                System.out.println("Flow " + thread.getName() + " is done.");
+            }
+        }
         // Поиск и вывод в консоль значения максимального количества повторений
         synchronized (sizeToFreq) {
             for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
