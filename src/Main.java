@@ -13,7 +13,7 @@ public class Main {
         int valueMax = 0;  // Значение максимального количества повторов комбинации
 
         Callable<Integer> call = () -> calcR(generateRoute("RLRFR", 100));
-        // Заполнения
+        // Заполнение коллекцик комбинаций повторов и их частоты
         for (int i = 1; i < 1000; i++) {
             Future<Integer> future = threadPool.submit(call);
             int countR = future.get();
