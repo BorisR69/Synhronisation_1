@@ -10,7 +10,7 @@ public class Main {
         int valueMax = 0;  // Значение максимального количества повторов комбинации
 
         // Заполнение коллекции комбинаций повторов и их частоты
-        for (int i = 1; i <= 100; i++) {
+        for (int i = 1; i <= 1000; i++) {
             Thread thread = new Thread(() -> {
 //                System.out.println("Float " + Thread.currentThread().getName() + " started.....");
                 final int countR = calcR(generateRoute("RLRFR", 100));
