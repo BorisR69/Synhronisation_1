@@ -24,33 +24,25 @@ public class Main {
                     }
                 }
             });
-            synchronized (myThread) {
-                myThread.add(thread);
-            }
+            myThread.add(thread);
             thread.start();
         }
         // Проверка завершения всех запущеных потоков
-        synchronized (myThread) {
-            for (Thread thread : myThread) {
-                thread.join();
+        for (Thread thread : myThread) {
+            thread.join();
 //                System.out.println("Flow " + thread.getName() + " is done.");
-            }
         }
         // Поиск и вывод в консоль значения максимального количества повторений
-        synchronized (sizeToFreq) {
-            for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
-                if (key1.getValue() > valueMax) {
-                    valueMax = key1.getValue();
-                    keyMax = key1.getKey();
-                }
+        for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
+            if (key1.getValue() > valueMax) {
+                valueMax = key1.getValue();
+                keyMax = key1.getKey();
             }
         }
         System.out.println("Самое частое количество повторений " + keyMax + " встретилось (" + valueMax + " раз)");
         // Вывод в консоль перечня комбинаций повторов и их частоты
-        synchronized (sizeToFreq) {
-            for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
-                System.out.println("- " + key1.getKey() + " (" + key1.getValue() + " раз)");
-            }
+        for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
+            System.out.println("- " + key1.getKey() + " (" + key1.getValue() + " раз)");
         }
     }
 
