@@ -8,6 +8,8 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         int keyMax = 0;    // Комбинация повторов встречающаяся максимальное количество раз
         int valueMax = 0;  // Значение максимального количества повторов комбинации
+        final int[] curValueMax = {0};
+        final int[] curKeyMax = {0};
 
         // Заполнение коллекции комбинаций повторов и их частоты
         for (int i = 1; i <= 1000; i++) {
@@ -22,35 +24,51 @@ public class Main {
                             sizeToFreq.put(countR, sizeToFreq.get(countR) + 1);
                         } else sizeToFreq.putIfAbsent(countR, 1);
                     }
+                    sizeToFreq.notify();
+
                 }
             });
-            synchronized (myThread) {
-                myThread.add(thread);
-            }
+            myThread.add(thread);
             thread.start();
         }
-        // Проверка завершения всех запущеных потоков
-        synchronized (myThread) {
-            for (Thread thread : myThread) {
-                thread.join();
-//                System.out.println("Flow " + thread.getName() + " is done.");
-            }
-        }
-        // Поиск и вывод в консоль значения максимального количества повторений
-        synchronized (sizeToFreq) {
-            for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
-                if (key1.getValue() > valueMax) {
-                    valueMax = key1.getValue();
-                    keyMax = key1.getKey();
+        // Поток подсчета текущего максимума
+        Thread calcCurMax = new Thread(() -> {
+            synchronized (sizeToFreq) {
+                while (!Thread.interrupted()) {
+                    try {
+                        sizeToFreq.wait();
+                        for (Map.Entry<Integer, Integer> key2 : sizeToFreq.entrySet()) {
+                            if (key2.getValue() > curValueMax[0]) {
+                                curValueMax[0] = key2.getValue();
+                                curKeyMax[0] = key2.getKey();
+                                System.out.println("Текущий максимум- " + curKeyMax[0] + " (" + curValueMax[0] + ")");
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+
                 }
+            }
+        });
+        calcCurMax.start();
+        // Проверка завершения всех запущеных потоков
+        for (Thread thread : myThread) {
+            thread.join();
+//                System.out.println("Flow " + thread.getName() + " is done.");
+        }
+        calcCurMax.interrupt(); // Прерывание потока подсчета текущего максимума
+        // Поиск и вывод в консоль значения максимального количества повторений
+        for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
+            if (key1.getValue() > valueMax) {
+                valueMax = key1.getValue();
+                keyMax = key1.getKey();
             }
         }
         System.out.println("Самое частое количество повторений " + keyMax + " встретилось (" + valueMax + " раз)");
         // Вывод в консоль перечня комбинаций повторов и их частоты
-        synchronized (sizeToFreq) {
-            for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
-                System.out.println("- " + key1.getKey() + " (" + key1.getValue() + " раз)");
-            }
+        for (Map.Entry<Integer, Integer> key1 : sizeToFreq.entrySet()) {
+            System.out.println("- " + key1.getKey() + " (" + key1.getValue() + " раз)");
         }
     }
 
