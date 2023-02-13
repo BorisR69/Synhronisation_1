@@ -8,8 +8,32 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         int keyMax = 0;    // Комбинация повторов встречающаяся максимальное количество раз
         int valueMax = 0;  // Значение максимального количества повторов комбинации
-        final int[] curValueMax = {0};
-        final int[] curKeyMax = {0};
+
+        // Поток подсчета текущего максимума
+        Thread calcCurMax = new Thread(() -> {
+            int curValueMax = 0;
+            int curKeyMax;
+            int num = 1;
+            synchronized (sizeToFreq) {
+                while (!Thread.interrupted()) {
+                    try {
+                        sizeToFreq.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                    for (Map.Entry<Integer, Integer> key2 : sizeToFreq.entrySet()) {
+                        if (key2.getValue() > curValueMax) {
+                            curValueMax = key2.getValue();
+                            curKeyMax = key2.getKey();
+                            System.out.println(num + " Текущий максимум- " + curKeyMax + " (" + curValueMax + ")");
+                            num ++;
+                        }
+                    }
+                }
+            }
+        });
+        calcCurMax.start();
 
         // Заполнение коллекции комбинаций повторов и их частоты
         for (int i = 1; i <= 1000; i++) {
@@ -25,33 +49,11 @@ public class Main {
                         } else sizeToFreq.putIfAbsent(countR, 1);
                     }
                     sizeToFreq.notify();
-
                 }
             });
             myThread.add(thread);
             thread.start();
         }
-        // Поток подсчета текущего максимума
-        Thread calcCurMax = new Thread(() -> {
-            synchronized (sizeToFreq) {
-                while (!Thread.interrupted()) {
-                    try {
-                        sizeToFreq.wait();
-                        for (Map.Entry<Integer, Integer> key2 : sizeToFreq.entrySet()) {
-                            if (key2.getValue() > curValueMax[0]) {
-                                curValueMax[0] = key2.getValue();
-                                curKeyMax[0] = key2.getKey();
-                                System.out.println("Текущий максимум- " + curKeyMax[0] + " (" + curValueMax[0] + ")");
-                            }
-                        }
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-
-                }
-            }
-        });
-        calcCurMax.start();
         // Проверка завершения всех запущеных потоков
         for (Thread thread : myThread) {
             thread.join();
